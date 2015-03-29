@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = openstack_auth_websso
+omit = openstack_auth_websso/tests/*,openstack_auth_websso/openstack/*
+
+[report]
+ignore-errors = True
