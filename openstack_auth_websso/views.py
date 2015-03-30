@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import logging
+import re
 import time
 
 from django.conf import settings
@@ -38,11 +39,28 @@ def websso_login(request):
     """Logs a user in using a token from Keystone's POST."""
     referer = request.META.get('HTTP_REFERER', settings.OPENSTACK_KEYSTONE_URL)
     auth_url = re.sub(r'/auth.*', '', referer)
+
     token = request.POST.get('token')
-    request.user = auth.authenticate(request=request, auth_url=auth_url,
-                                     token=token)
-    auth_user.set_session_from_user(request, request.user)
-    auth.login(request, request.user)
+    if not token: 
+        LOG.info('WebSSO user authentication failed. No token was posted to '
+                 'the websso login form for authentication.')
+        return django_http.HttpResponse('Unauthorized', status=401)
+
+    user = auth.authenticate(request=request, 
+                             auth_url=auth_url,
+                             token=token) 
+
+    if not (user and user.is_authenticated()):
+        LOG.info('WebSSO user authentication failed. No user was able to be '
+                 'authenticated from the WebSSO token.')
+        return django_http.HttpResponse('Unauthorized', status=401)
+
+    auth.login(request, user)
+    res = shortcuts.redirect(settings.LOGIN_REDIRECT_URL)
+    auth_user.set_session_from_user(request, user)
+    request.session['last_activity'] = int(time.time())
+ 
     if request.session.test_cookie_worked():
         request.session.delete_test_cookie()
-    return django_http.HttpResponseRedirect(settings.LOGIN_REDIRECT_URL)
+
+    return res

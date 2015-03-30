@@ -12,8 +12,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import pbr.version
+#import pbr.version
+#
+#
+#__version__ = pbr.version.VersionInfo(
+#    'openstack_auth_websso').version_string()
 
-
-__version__ = pbr.version.VersionInfo(
-    'openstack_auth_websso').version_string()
+__version__ = "0.0.1"
